@@ -1,5 +1,11 @@
 class Menu{
-    // to-do: agregar constructor, listeners, 
+    // to-do: agregar constructor, listeners,
+    constructor(rsc){
+        this.rsc = rsc;
+        this.playButton = new button('Play');
+        
+    }
+
 }
 
 Object.assign(Menu.prototype, Scene);
