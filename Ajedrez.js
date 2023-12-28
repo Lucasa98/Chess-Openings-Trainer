@@ -13,6 +13,23 @@ class Ajedrez{
             this.resizeCanvas();
         })
 
+        // Preload sprites
+        this.rsc = new Map();
+        Promise.all([
+            scene.preloadImage('tablero','/sprites/tablero.png'),
+            //scene.preloadImage('sprites/caballo.png'),
+            //scene.preloadImage('sprites/alfil.png'),
+            //...
+          ])
+          .then(function(preloadedImages) {
+            console.log('All images are preloaded:', preloadedImages);
+            // Draw preloaded images whenever needed
+            scene.drawPreloadedImages();
+          })
+          .catch(function(error) {
+            console.error(error.message);
+          });
+
         // Escena inicial (menu)
         this.scene = new Menu();
     }
@@ -32,6 +49,22 @@ class Ajedrez{
         // draw
         this.scene.draw(this.ctx);
     }
+
+    // Metodo para precargar sprites
+    preloadImage = function(key, imageSrc) {
+        var self = this;
+        return new Promise(function(resolve, reject) {
+          var image = new Image();
+          image.onload = function() {
+            self.rsc.set(key,image)
+            resolve(image);
+          };
+          image.onerror = function() {
+            reject(new Error('Failed to load image: ' + imageSrc));
+          };
+          image.src = imageSrc;
+        });
+      };
 
     // Listeners ( ProcessEvents )
     resizeCanvas(){
