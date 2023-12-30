@@ -1,4 +1,4 @@
 const Scene = {
-    update: function(canvas){},
-    draw: function(ctx){},
+    update: function(){},
+    draw: function(){},
 };

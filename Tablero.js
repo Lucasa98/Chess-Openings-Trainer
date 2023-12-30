@@ -1,19 +1,19 @@
 class Tablero{
-    constructor(img, ctx, canvas){
+    constructor(ctx, canvas){
         // Enlazar this's
         this.update = this.update.bind(this);
         this.draw = this.draw.bind(this);
 
-        this.img = img;
+        this.img = RSC.get('tablero');
         this.ctx = ctx;
         this.canvas = canvas;
     }
 
-    update(canvas){
+    update(){
 
     }
 
-    draw(ctx){
+    draw(){
         if(this.img){
             this.ctx.drawImage(this.img, 0, 0);
         }else{
