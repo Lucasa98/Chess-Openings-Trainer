@@ -1,7 +1,16 @@
+/* Esta clase se encarga de:
+        ~ Guardar el tipo de la pieza (peon, caballo, etc.).
+        ~ Guardar el color de la pieza.
+        ~ Guardar la posicion de la pieza:
+            ~ Posicion discreta (casilla del tablero)
+            ~ Posicion continua (pixel de la pantalla, pos del mouse cuando es arrastrada).
+        ~ Guardar y dibujar el sprite.
+    No se encarga de la lógica del juego (comer pieza, dónde puede moverse, etc.).
+*/
+
 class Pieza{
     constructor(ctx, canvas, tipo, color, x, y){
         // Enlazar this's
-        this.update = this.update.bind(this);
         this.draw = this.draw.bind(this);
 
         this.ctx = ctx;
@@ -9,46 +18,30 @@ class Pieza{
 
         this.tipo = tipo;
         this.color = color;
-        this.x = x*50;
-        this.y = 350 - y*50;
+        this.casilla = {x: x, y: y};
+        this.pos = {x: x*50, y: 350-y*50};
 
-        this.originalPos = {x: this.x, y: this.y};
         this.drag = false;
         this.img = RSC.get(this.tipo);
     }
 
-    update(){
-        if(this.drag){
-            this.x = MOUSEPOS.x-25;
-            this.y = MOUSEPOS.y-25;
-        }
-    }
-
-    draw(){
-        if(this.img){
-            this.ctx.drawImage(this.img, this.x, this.y);
-        }else{
-            console.error('img not loaded');
-        }
+    Draw(){
+        if(this.dragged)
+            this.pos = {x: MOUSEPOS.x-25, y: MOUSEPOS.y-25};
+        this.ctx.drawImage(this.img, this.pos.x, this.pos.y);
     }
 
     Drag(){
-        this.originalPos = {x: this.x, y: this.y};
-        this.drag = true;
+        this.dragged = true;
     }
 
-    Drop(){
-        this.drag = false;
-    }
-
-    Return(){
-        this.x = this.originalPos.x;
-        this.y = this.originalPos.y;
-    }
-
-    fix(x,y){
-        this.x = x;
-        this.y = y;
-        this.originalPos = {x: this.x, y: this.y};
+    Drop(cas){
+        if(cas){
+            this.casilla = {x: cas.x, y: cas.y};
+            this.pos = {x: cas.x*50, y: 350-cas.y*50};
+        }else{
+            this.pos = {x:this.casilla.x*50, y: 350-this.casilla.y*50};
+        }
+        this.dragged = false;
     }
 }

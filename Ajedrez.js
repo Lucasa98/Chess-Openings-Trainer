@@ -11,9 +11,8 @@ class Ajedrez{
     this.ctx = this.canvas.getContext('2d');
 
     // Config
-    var config = [new ChessElement('pw',true,4,2),
-                  new ChessElement('pb',false,4,7),
-                  new ChessElement('nw',true,4,7)];
+    var config = [new ChessElement('kw',true,4,2),
+                  new ChessElement('kb',false,4,7)];
 
     // Preload sprites
     this.LOADED = false;
@@ -32,14 +31,15 @@ class Ajedrez{
       this.preloadImage('rb','sprites/rb.png'),
       this.preloadImage('rw','sprites/rw.png'),
       this.preloadImage('pb','sprites/pb.png'),
-      this.preloadImage('pw','sprites/pw.png')
+      this.preloadImage('pw','sprites/pw.png'),
+      this.preloadImage('marca','sprites/marca.png')
     ])
     .then(function(preloadedImages) {
       console.log('All images are preloaded:', preloadedImages);
       self.LOADED = true;
 
       // Escena Inicial (Game para debugear, deberia ser Menu)
-      self.scene = new Game(self.ctx, self.canvas, config);
+      self.game = new Game(self.ctx, self.canvas, config);
     })
     .catch(function(error) {
       console.error(error.message);
@@ -63,10 +63,11 @@ class Ajedrez{
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.heigth);
         
         // update
-        this.scene.update();
-
+        if(this.game){
+          this.game.update();
+          this.game.draw();
+        }
         // draw
-        this.scene.draw();
 
         this.ctx.beginPath();
         this.ctx.arc(0, 0, 5, 0, Math.PI * 2, false);
