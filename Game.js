@@ -62,17 +62,17 @@ class Game{
         if(this.piezaSeleccionada === -1){
             if(MOUSEPOS.x >= 0 && MOUSEPOS.y >= 0 && MOUSEPOS.x < 400 && MOUSEPOS.y < 400){
                 // 2 - Detectar casilla
-                var casilla = {x: MOUSEPOS.x/50, y: 7-MOUSEPOS.y/50};
-                var i = this.tabPos[casilla.x][casilla.y];
+                var casilla = {x: Math.floor(MOUSEPOS.x/50), y: 7-Math.floor(MOUSEPOS.y/50)};
+                var i = JSON.parse(JSON.stringify(this.tabPos[casilla.x][casilla.y]));
 
                 // 3.1 - La casilla esta ocupada por una pieza propia
                 if(i != -1 && this.piezas[i].color == this.turno){
                     // 3.1.1 - Seleccionar pieza
-                    this.piezaSeleccionada = i;
+                    this.piezaSeleccionada = JSON.parse(JSON.stringify(i));
                     // 3.1.2 - Agarrar pieza
                     this.piezas[i].Drag();
                     // 3.1.3 - Calcular movimientos posibles para la pieza seleccionada
-                    this.marcas = CalcularMovimientos(i);
+                    this.marcas = this.CalcularMovimientos(i, true);
                 }
                 // 3.2 - La casilla esta vacia u ocupada por pieza enemiga (no pasa nada)
 
@@ -81,12 +81,20 @@ class Game{
         // 1.2 - SI hay pieza seleccionada
             // 1.2.1 - Detectar Casilla
             if(MOUSEPOS.x >= 0 && MOUSEPOS.y >= 0 && MOUSEPOS.x < 400 && MOUSEPOS.y < 400){
-                var casilla = {x: MOUSEPOS.x/50, y: 7-MOUSEPOS.y/50};
+                var casilla = {x: Math.floor(MOUSEPOS.x/50), y: 7-Math.floor(MOUSEPOS.y/50)};
                 var i = this.tabPos[casilla.x][casilla.y];
-                // 1.2.2.1 - La casilla no es un movimiento valido (Deseleccionar pieza)
-                if(!this.marcas.includes({x: casilla.x, y: casilla.y})){
-                    this.piezaSeleccionada = -1;
-                    this.marcas = [];
+                // 1.2.2.1 - La casilla no es un movimiento valido
+                if(!this.marcas.some(obj=>obj.x == casilla.x && obj.y == casilla.y)){
+                    // 1.2.2.1.1 - La casilla no es la casilla de la pieza (deseleccionar)
+                    if(this.piezas[this.piezaSeleccionada].casilla.x != casilla.x || this.piezas[this.piezaSeleccionada].casilla.y != casilla.y){
+                        console.log("1.2.2.1.1");   // -----DEBUG-----
+                        this.piezaSeleccionada = -1;
+                        this.marcas = [];
+                    }else{
+                        // 1.2.2.1.2 - La casilla es la casilla de la pieza (arrastrar)
+                        console.log("1.2.2.1.2");   // -----DEBUG-----
+                        this.piezas[i].Drag();
+                    }
                 }else{
                 // 1.2.2.2 - La casilla es un movimiento valido
                     // 1.2.2.2.1 - Eliminar pieza en la casilla destino (si hay)
@@ -96,7 +104,7 @@ class Game{
                     }
                     // 1.2.2.2.2 - Actualiza tabPos
                     this.tabPos[casilla.x][casilla.y] = this.piezaSeleccionada;     //casilla nueva
-                    this.tabPos[this.piezaSeleccionada.casilla.x][this.piezaSeleccionada.casilla.y] = -1;   //casilla vieja
+                    this.tabPos[this.piezas[this.piezaSeleccionada].casilla.x][this.piezas[this.piezaSeleccionada].casilla.y] = -1;   //casilla vieja
                     // 1.2.2.2.3 - Mover pieza
                     this.piezas[this.piezaSeleccionada].Drop(casilla);
                     // 1.2.2.2.4 - Deseleccionar pieza
@@ -117,29 +125,33 @@ class Game{
         // 1.1 - Si no hay pieza seleccionada, no hacemos nada
         if(this.piezaSeleccionada != -1){
             // 1.2 - Si hay pieza seleccionada
-            // 1.2.1 - Calcular casilla
-            var casilla = {x: MOUSEPOS.x/50, y: 7-MOUSEPOS.y/50};
-            var i = this.tabPos[casilla.x][casilla.y];
-            // 1.2.2.1 - Si es un movimiento valido (se mueve y deseleccionamos)
-            if(this.marcas.includes(casilla)){
-                // 1.2.2.1.1 - Eliminar pieza en la casilla destino (si hay)
-                if(this.tabPos[casilla.x][casilla.y] != -1){
-                    this.EliminarPieza(i);
-                    this.tabPos[casilla.x][casilla.y] = -1;
+            if(MOUSEPOS.x >= 0 && MOUSEPOS.y >= 0 && MOUSEPOS.x < 400 && MOUSEPOS.y < 400){
+                // 1.2.1 - Calcular casilla
+                var casilla = {x: Math.floor(MOUSEPOS.x/50), y: 7-Math.floor(MOUSEPOS.y/50)};
+                var i = this.tabPos[casilla.x][casilla.y];
+                // 1.2.2.1 - Si es un movimiento valido (se mueve y deseleccionamos)
+                if(this.marcas.some(obj=>obj.x === casilla.x && obj.y === casilla.y)){
+                    // 1.2.2.1.1 - Eliminar pieza en la casilla destino (si hay)
+                    if(this.tabPos[casilla.x][casilla.y] != -1){
+                        this.EliminarPieza(i);
+                        this.tabPos[casilla.x][casilla.y] = -1;
+                    }
+                    // 1.2.2.1.2 - Actualiza tabPos
+                    this.tabPos[casilla.x][casilla.y] = JSON.parse(JSON.stringify(this.piezaSeleccionada));     //casilla nueva
+                    this.tabPos[this.piezas[this.piezaSeleccionada].casilla.x][this.piezas[this.piezaSeleccionada].casilla.y] = -1;   //casilla vieja
+                    // 1.2.2.1.3 - Mover pieza
+                    this.piezas[this.piezaSeleccionada].Drop(casilla);
+                    // 1.2.2.1.4 - Deseleccionar pieza
+                    this.piezaSeleccionada = -1;
+                    this.marcas = [];
+                    // 1.2.2.1.5 - Terminar turno
+                    this.turno = !this.turno;
+                }else{
+                // 1.2.2.2 - Si no es un movimiento valido (vuelve al origen)
+                    this.piezas[this.piezaSeleccionada].Drop(this.piezas[this.piezaSeleccionada].casilla);
                 }
-                // 1.2.2.1.2 - Actualiza tabPos
-                this.tabPos[casilla.x][casilla.y] = this.piezaSeleccionada;     //casilla nueva
-                this.tabPos[this.piezaSeleccionada.casilla.x][this.piezaSeleccionada.casilla.y] = -1;   //casilla vieja
-                // 1.2.2.1.3 - Mover pieza
-                this.piezas[this.piezaSeleccionada].Drop(casilla);
-                // 1.2.2.1.4 - Deseleccionar pieza
-                this.piezaSeleccionada = -1;
-                this.marcas = [];
-                // 1.2.2.1.5 - Terminar turno
-                this.turno = !this.turno;
             }else{
-            // 1.2.2.2 - Si no es un movimiento valido (vuelve al origen)
-                this.piezas[i].Drop();
+                this.piezas[this.piezaSeleccionada].Drop(this.piezas[this.piezaSeleccionada].casilla);
             }
         }
     }
@@ -160,7 +172,9 @@ class Game{
         
         for(var j=0; j<this.piezas.length; ++j){
             if(equipo === (this.piezas[j].tipo.charAt(1) === 'w')){
-                if(this.CalcularMovimientos(j,false,i,cas).includes(myking))
+                console.log('movimiento de ' + j + ' si ' + i + 'se moviera a ' + cas.x + ' ' + cas.y);
+                console.log(this.CalcularMovimientos(j,false,i,cas));
+                if(this.CalcularMovimientos(j,false,i,cas).some(obj=>obj.x == myking.x && obj.y == myking.y))
                     return true;
             }
         }
@@ -176,14 +190,17 @@ class Game{
                 ~ j: (opcional) pieza a cambiar
                 ~ casilla: (opcional) si se recibe, es la casilla en la que se debe considerar a j. Si no se recibe, se ignora a j.
         */
+        console.log('CalcularMov: i: ' + i + '; king: ' + king + '; j: ' + j + '; casilla: (');
+        console.log(casilla);
         var moves = [];
-        var myTabPos = [...this.tabPos];    //copia de tabPos
+        var myTabPos = JSON.parse(JSON.stringify(this.tabPos));    //copia de tabPos
         if(j){
             if(casilla){
                 myTabPos[casilla.x][casilla.y] = j;
             }
             myTabPos[this.piezas[j].casilla.x][this.piezas[j].casilla.y] = -1;
         }
+        
 
         // Todos los movimientos posible segun la pieza, su posiciones y las piezas propias.
         switch(this.piezas[i].tipo.charAt(0)){
@@ -209,18 +226,17 @@ class Game{
 
         // Descartar los no validos:
         //  ~ Dejan el rey en mate
-
         if(king){
             for(var k=0; k<moves.length; ++k){
-                if(turno){
+                if(this.turno){
                     // "Si es jaque de las negras moviendo la pieza i a la casilla moves[i]"
-                    if(Jaque(false,i,moves[i])){
+                    if(this.Jaque(false,i,moves[k])){
                         moves.splice(k,1);
                         k -= 1;
                     }
                 }else{
                     // "Si es jaque de las blancas moviendo la pieza i a la casilla moves[i]"
-                    if(Jaque(true,i,moves[i])){
+                    if(this.Jaque(true,i,moves[k])){
                         moves.splice(k,1);
                         k -= 1;
                     }
@@ -256,91 +272,155 @@ class Game{
         var moves = [];
         if(cas.x === 0){
             if(cas.y === 0){
-                // esquina superior izquierda
+                // esquina inferior izquierda
                 // aca deberia verificar: que no este ocupada y que no esté amenazada (en el caso del rey)
-                if(this.piezas[this.tabPos[cas.x+1][cas.y]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x+1,cas.y);      // E
-                if(this.piezas[this.tabPos[cas.x][cas.y+1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x,cas.y+1);      // S
-                if(this.piezas[this.tabPos[cas.x+1][cas.y+1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x+1,cas.y+1);    // SE
+                if(this.tabPos[cas.x+1][cas.y] == -1 || this.piezas[this.tabPos[cas.x+1][cas.y]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x: cas.x+1, y: cas.y});      // E
+                if(this.tabPos[cas.x][cas.y+1] == -1 || this.piezas[this.tabPos[cas.x][cas.y+1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x,y:cas.y+1});      // N
+                if(this.tabPos[cas.x+1][cas.y+1] == -1 || this.piezas[this.tabPos[cas.x+1][cas.y+1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x+1,y:cas.y+1});    // NE
             }else if(cas.y === 7){
-                //  esquina inferior izquierda
-                if(this.piezas[this.tabPos[cas.x+1][cas.y]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x+1,cas.y);      // E
-                if(this.piezas[this.tabPos[cas.x][cas.y-1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x,cas.y-1);      // N
-                if(this.piezas[this.tabPos[cas.x+1][cas.y-1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x+1,cas.y-1);    // NE
+                //  esquina superior izquierda
+                if(this.tabPos[cas.x+1][cas.y] == -1 || this.piezas[this.tabPos[cas.x+1][cas.y]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x+1,y:cas.y});      // E
+                if(this.tabPos[cas.x][cas.y-1] == -1 || this.piezas[this.tabPos[cas.x][cas.y-1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x,y:cas.y-1});      // S
+                if(this.tabPos[cas.x+1][cas.y-1] == -1 || this.piezas[this.tabPos[cas.x+1][cas.y-1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x+1,y:cas.y-1});    // SE
             }else{
                 // lateral izquierdo
-                if(this.piezas[this.tabPos[cas.x][cas.y-1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x,cas.y-1);      // N
-                if(this.piezas[this.tabPos[cas.x+1][cas.y-1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x+1,cas.y-1);    // NE
-                if(this.piezas[this.tabPos[cas.x+1][cas.y]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x+1,cas.y);      // E
-                if(this.piezas[this.tabPos[cas.x+1][cas.y+1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x+1,cas.y+1);    // SE
-                if(this.piezas[this.tabPos[cas.x][cas.y+1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x,cas.y+1);      // S
+                if(this.tabPos[cas.x][cas.y-1] == -1 || this.piezas[this.tabPos[cas.x][cas.y-1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x,y:cas.y-1});      // S
+                if(this.tabPos[cas.x+1][cas.y-1] == -1 || this.piezas[this.tabPos[cas.x+1][cas.y-1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x+1,y:cas.y-1});    // SE
+                if(this.tabPos[cas.x+1][cas.y] == -1 || this.piezas[this.tabPos[cas.x+1][cas.y]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x+1,y:cas.y});      // E
+                if(this.tabPos[cas.x+1][cas.y+1] == -1 || this.piezas[this.tabPos[cas.x+1][cas.y+1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x+1,y:cas.y+1});    // NE
+                if(this.tabPos[cas.x][cas.y+1] == -1 || this.piezas[this.tabPos[cas.x][cas.y+1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x,y:cas.y+1});      // N
             }
         }else if(cas.x === 7){
             if(cas.y === 0){
-                // esquina superior derecha
+                // esquina inferior derecha
                 // aca deberia verificar: que no este ocupada y que no esté amenazada (en el caso del rey)
-                if(this.piezas[this.tabPos[cas.x-1][cas.y]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x-1,cas.y);      // O
-                if(this.piezas[this.tabPos[cas.x][cas.y+1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x,cas.y+1);      // S
-                if(this.piezas[this.tabPos[cas.x-1][cas.y+1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x-1,cas.y+1);    // SO
+                if(this.tabPos[cas.x-1][cas.y] == -1 || this.piezas[this.tabPos[cas.x-1][cas.y]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x-1,y:cas.y});      // O
+                if(this.tabPos[cas.x][cas.y+1] == -1 || this.piezas[this.tabPos[cas.x][cas.y+1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x,y:cas.y+1});      // N
+                if(this.tabPos[cas.x-1][cas.y+1] == -1 || this.piezas[this.tabPos[cas.x-1][cas.y+1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x-1,y:cas.y+1});    // NO
             }else if(cas.y === 7){
-                //  esquina inferior derecha
-                if(this.piezas[this.tabPos[cas.x-1][cas.y]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x-1,cas.y);      // O
-                if(this.piezas[this.tabPos[cas.x][cas.y-1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x,cas.y-1);      // N
-                if(this.piezas[this.tabPos[cas.x-1][cas.y-1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x-1,cas.y-1);    // NO
+                //  esquina superior derecha
+                if(this.tabPos[cas.x-1][cas.y] == -1 || this.piezas[this.tabPos[cas.x-1][cas.y]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x-1,y:cas.y});      // O
+                if(this.tabPos[cas.x][cas.y-1] == -1 || this.piezas[this.tabPos[cas.x][cas.y-1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x,y:cas.y-1});      // S
+                if(this.tabPos[cas.x-1][cas.y-1] == -1 || this.piezas[this.tabPos[cas.x-1][cas.y-1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x-1,y:cas.y-1});    // SO
             }else{
                 // lateral derecho
-                if(this.piezas[this.tabPos[cas.x][cas.y-1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x,cas.y-1);      // N
-                if(this.piezas[this.tabPos[cas.x-1][cas.y-1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x-1,cas.y-1);    // NO
-                if(this.piezas[this.tabPos[cas.x-1][cas.y]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x-1,cas.y);      // O
-                if(this.piezas[this.tabPos[cas.x-1][cas.y+1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x-1,cas.y+1);    // SO
-                if(this.piezas[this.tabPos[cas.x][cas.y+1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                    moves.push(cas.x,cas.y+1);      // S
+                if(this.tabPos[cas.x][cas.y-1] == -1 || this.piezas[this.tabPos[cas.x][cas.y-1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x,y:cas.y-1});      // S
+                if(this.tabPos[cas.x-1][cas.y-1] == -1 || this.piezas[this.tabPos[cas.x-1][cas.y-1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x-1,y:cas.y-1});    // SO
+                if(this.tabPos[cas.x-1][cas.y] == -1 || this.piezas[this.tabPos[cas.x-1][cas.y]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x-1,y:cas.y});      // O
+                if(this.tabPos[cas.x-1][cas.y+1] == -1 || this.piezas[this.tabPos[cas.x-1][cas.y+1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x-1,y:cas.y+1});    // NO
+                if(this.tabPos[cas.x][cas.y+1] == -1 || this.piezas[this.tabPos[cas.x][cas.y+1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x,y:cas.y+1});      // N
             }
         }else{
-            // todo
-            if(this.piezas[this.tabPos[cas.x-1][cas.y-1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                moves.push(cas.x-1,cas.y-1);    // NO
-            if(this.piezas[this.tabPos[cas.x][cas.y-1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                moves.push(cas.x,cas.y-1);      // N
-            if(this.piezas[this.tabPos[cas.x+1][cas.y-1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                moves.push(cas.x+1,cas.y-1);    // NE
-            if(this.piezas[this.tabPos[cas.x+1][cas.y]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                moves.push(cas.x+1,cas.y);      // E
-            if(this.piezas[this.tabPos[cas.x+1][cas.y+1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                moves.push(cas.x+1,cas.y+1);    // SE
-            if(this.piezas[this.tabPos[cas.x][cas.y+1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                moves.push(cas.x,cas.y+1);      // S
-            if(this.piezas[this.tabPos[cas.x-1][cas.y+1]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                moves.push(cas.x-1,cas.y+1);    // SO
-            if(this.piezas[this.tabPos[cas.x-1][cas.y]].tipo != this.piezas[this.tabPos[cas.x][cas.y]])
-                moves.push(cas.x-1,cas.y);      // O
+            if(cas.y === 0){
+                // borde inferior
+                if(this.tabPos[cas.x-1][cas.y] == -1 || this.piezas[this.tabPos[cas.x-1][cas.y]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x-1,y:cas.y});    // O
+                if(this.tabPos[cas.x-1][cas.y+1] == -1 || this.piezas[this.tabPos[cas.x-1][cas.y+1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x-1,y:cas.y+1});  // NO
+                if(this.tabPos[cas.x][cas.y+1] == -1 || this.piezas[this.tabPos[cas.x][cas.y+1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x,y:cas.y+1});    // N
+                if(this.tabPos[cas.x+1][cas.y+1] == -1 || this.piezas[this.tabPos[cas.x+1][cas.y+1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x+1,y:cas.y+1});  // NE
+                if(this.tabPos[cas.x+1][cas.y] == -1 || this.piezas[this.tabPos[cas.x+1][cas.y]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x+1,y:cas.y});    // E
+            }else if(cas.y === 7){
+                // borde superior
+                if(this.tabPos[cas.x-1][cas.y] == -1 || this.piezas[this.tabPos[cas.x-1][cas.y]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x-1,y:cas.y});    // O
+                if(this.tabPos[cas.x-1][cas.y-1] == -1 || this.piezas[this.tabPos[cas.x-1][cas.y-1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x-1,y:cas.y-1});  // SO
+                if(this.tabPos[cas.x][cas.y-1] == -1 || this.piezas[this.tabPos[cas.x][cas.y-1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x,y:cas.y-1});    // S
+                if(this.tabPos[cas.x+1][cas.y-1] == -1 || this.piezas[this.tabPos[cas.x+1][cas.y-1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x+1,y:cas.y-1});  // SE
+                if(this.tabPos[cas.x+1][cas.y] == -1 || this.piezas[this.tabPos[cas.x+1][cas.y]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x+1,y:cas.y});    // E
+            }else{
+                // todo
+                if(this.tabPos[cas.x-1][cas.y-1] == -1 || this.piezas[this.tabPos[cas.x-1][cas.y-1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x-1,y:cas.y-1});    // SO
+                if(this.tabPos[cas.x][cas.y-1] == -1 || this.piezas[this.tabPos[cas.x][cas.y-1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x,y:cas.y-1});      // S
+                if(this.tabPos[cas.x+1][cas.y-1] == -1 || this.piezas[this.tabPos[cas.x+1][cas.y-1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x+1,y:cas.y-1});    // SE
+                if(this.tabPos[cas.x+1][cas.y] == -1 || this.piezas[this.tabPos[cas.x+1][cas.y]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x+1,y:cas.y});      // E
+                if(this.tabPos[cas.x+1][cas.y+1] == -1 || this.piezas[this.tabPos[cas.x+1][cas.y+1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x+1,y:cas.y+1});    // NE
+                if(this.tabPos[cas.x][cas.y+1] == -1 || this.piezas[this.tabPos[cas.x][cas.y+1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x,y:cas.y+1});      // N
+                if(this.tabPos[cas.x-1][cas.y+1] == -1 || this.piezas[this.tabPos[cas.x-1][cas.y+1]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x-1,y:cas.y+1});    // NO
+                if(this.tabPos[cas.x-1][cas.y] == -1 || this.piezas[this.tabPos[cas.x-1][cas.y]].tipo.charAt(1) != this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x:cas.x-1,y:cas.y});      // O
+            }
         }
+        return moves;
+    }
 
+    Pawn(cas){
+        var moves = [];
+        if(this.piezas[this.tabPos[cas.x][cas.y]].tipo.charAt(1) == 'w'){
+            // Peon blanco
+            // adelante
+            if(this.tabPos[cas.x][cas.y+1] == -1)
+                moves.push({x: cas.x, y: cas.y+1});
+            // diagonales
+            if(cas.x > 0 && this.tabPos[cas.x-1][cas.y+1] != -1 && this.piezas[this.tabPos[cas.x-1][cas.y+1]].tipo.charAt(1) == 'b')
+                moves.push({x: cas.x-1, y: cas.y+1});
+            if(cas.x < 7 && this.tabPos[cas.x+1][cas.y+1] != -1 && this.piezas[this.tabPos[cas.x+1][cas.y+1]].tipo.charAt(1) == 'b')
+                moves.push({x: cas.x+1, y: cas.y+1});
+        }else{
+            // Peon negro
+            // adelante
+            if(this.tabPos[cas.x][cas.y-1] == -1)
+                moves.push({x: cas.x, y: cas.y-1});
+            // diagonales
+            if(cas.x > 0 && this.tabPos[cas.x-1][cas.y-1] != -1 && this.piezas[this.tabPos[cas.x-1][cas.y-1]].tipo.charAt(1) == 'w')
+                moves.push({x: cas.x-1, y: cas.y-1});
+            if(cas.x < 7 && this.tabPos[cas.x+1][cas.y-1] != -1 && this.piezas[this.tabPos[cas.x+1][cas.y-1]].tipo.charAt(1) == 'w')
+                moves.push({x: cas.x+1, y: cas.y-1});
+        }
         return moves;
     }
 
     update(){
-        this.piezaSeleccionada = this.piezaSeleccionada;
+        // Assuming you have an element with id "exampleElement" in your HTML
+        var str = "<p>";
+        if(this.piezaSeleccionada != -1)
+            str = "pieza seleccionada: " + this.piezas[this.piezaSeleccionada].tipo + `<br>`;
+        str += "marcas: ";
+        for(var i=0; i<this.marcas.length; ++i)
+            str += "(" + this.marcas[i].x + "," + this.marcas[i].y + ") ";
+        str += "<br>";
+        for(var i=0; i<this.piezas.length; ++i){
+            str += this.piezas[i].tipo + "; (" + this.piezas[i].casilla.x + "," +this.piezas[i].casilla.y + ")"
+                + "; tabPos dice: " + this.tabPos[this.piezas[i].casilla.x][this.piezas[i].casilla.y] + "<br>";
+        }
+        str += "</p>";
+        document.getElementById("marcas").innerHTML = str;
     }
 
     draw(){
@@ -349,7 +429,7 @@ class Game{
             this.piezas[i].Draw();
         }
         for(var i=0; i<this.marcas.length; ++i){
-            this.ctx.drawImage(RSC.get('marca'), marcas[i].x, marcas[i].y);
+            this.ctx.drawImage(RSC.get('marca'), this.marcas[i].x*50, 350-this.marcas[i].y*50);
         } 
     }
 }

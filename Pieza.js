@@ -11,7 +11,7 @@
 class Pieza{
     constructor(ctx, canvas, tipo, color, x, y){
         // Enlazar this's
-        this.draw = this.draw.bind(this);
+        this.draw = this.Draw.bind(this);
 
         this.ctx = ctx;
         this.canvas = canvas;
@@ -36,12 +36,8 @@ class Pieza{
     }
 
     Drop(cas){
-        if(cas){
-            this.casilla = {x: cas.x, y: cas.y};
-            this.pos = {x: cas.x*50, y: 350-cas.y*50};
-        }else{
-            this.pos = {x:this.casilla.x*50, y: 350-this.casilla.y*50};
-        }
+        this.casilla = {x: cas.x, y: cas.y};
+        this.pos = {x: cas.x*50, y: 350-cas.y*50};
         this.dragged = false;
     }
 }

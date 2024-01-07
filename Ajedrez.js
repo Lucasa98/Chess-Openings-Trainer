@@ -11,8 +11,10 @@ class Ajedrez{
     this.ctx = this.canvas.getContext('2d');
 
     // Config
-    var config = [new ChessElement('kw',true,4,2),
-                  new ChessElement('kb',false,4,7)];
+    var config = [new ChessElement('kw',true,4,0),
+                  new ChessElement('kb',false,4,7),
+                  new ChessElement('pw',true,4,1),
+                  new ChessElement('pb',false,4,6)];
 
     // Preload sprites
     this.LOADED = false;
@@ -42,7 +44,12 @@ class Ajedrez{
       self.game = new Game(self.ctx, self.canvas, config);
     })
     .catch(function(error) {
-      console.error(error.message);
+      // Check if the error object has a message property
+      if (error && error.message) {
+        console.error(error.message);
+      } else {
+          console.error('An error occurred:', error);
+      }
     });
 
     // Listeners (Events processors)
@@ -60,7 +67,7 @@ class Ajedrez{
       if(this.LOADED){
         // Lo que se debe dibujar en el proximo frame
         // clear
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.heigth);
+        this.ctx.clearRect(0, 0, 500, 500);
         
         // update
         if(this.game){
