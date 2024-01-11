@@ -11,10 +11,8 @@ class Ajedrez{
     this.ctx = this.canvas.getContext('2d');
 
     // Config
-    var config = [new ChessElement('kw',true,4,0),
-                  new ChessElement('kb',false,4,7),
-                  new ChessElement('pw',true,4,1),
-                  new ChessElement('pb',false,4,6)];
+    // arreglo con jugadas
+    var config = [{i: {x: 4, y: 1}, f: {x: 4, y: 3}}, {i: {x: 4, y: 6}, f: {x: 4, y: 4}}];
 
     // Preload sprites
     this.LOADED = false;
@@ -67,7 +65,7 @@ class Ajedrez{
       if(this.LOADED){
         // Lo que se debe dibujar en el proximo frame
         // clear
-        this.ctx.clearRect(0, 0, 500, 500);
+        this.ctx.clearRect(0, 0, 400, 400);
         
         // update
         if(this.game){
@@ -83,19 +81,19 @@ class Ajedrez{
         this.ctx.closePath();
 
         this.ctx.beginPath();
-        this.ctx.arc(500, 0, 5, 0, Math.PI * 2, false);
+        this.ctx.arc(400, 0, 5, 0, Math.PI * 2, false);
         this.ctx.fillStyle = 'blue';
         this.ctx.fill();
         this.ctx.closePath();
 
         this.ctx.beginPath();
-        this.ctx.arc(0, 500, 5, 0, Math.PI * 2, false);
+        this.ctx.arc(0, 400, 5, 0, Math.PI * 2, false);
         this.ctx.fillStyle = 'blue';
         this.ctx.fill();
         this.ctx.closePath();
 
         this.ctx.beginPath();
-        this.ctx.arc(500, 500, 5, 0, Math.PI * 2, false);
+        this.ctx.arc(400, 400, 5, 0, Math.PI * 2, false);
         this.ctx.fillStyle = 'blue';
         this.ctx.fill();
         this.ctx.closePath();
@@ -122,7 +120,7 @@ class Ajedrez{
 
   // Listeners ( ProcessEvents )
   resizeCanvas(){
-    this.canvas.width = 500;
-    this.canvas.height = 500;
+    this.canvas.width = 400;
+    this.canvas.height = 400;
   }
 }

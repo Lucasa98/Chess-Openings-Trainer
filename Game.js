@@ -13,7 +13,38 @@ class Game{
         this.ctx = ctx;
         this.canvas = canvas;
 
-        this.initialConfig = config;
+        this.initialConfig = [new ChessElement('kw',true,4,0),
+                            new ChessElement('kb',false,4,7),
+                            new ChessElement('qw',true,3,0),
+                            new ChessElement('qb',false,3,7),
+                            new ChessElement('nw',true,1,0),
+                            new ChessElement('nw',true,6,0),
+                            new ChessElement('nb',false,1,7),
+                            new ChessElement('nb',false,6,7),
+                            new ChessElement('bw',true,5,0),
+                            new ChessElement('bw',true,2,0),
+                            new ChessElement('bb',false,2,7),
+                            new ChessElement('bb',false,5,7),
+                            new ChessElement('rw',true,0,0),
+                            new ChessElement('rw',true,7,0),
+                            new ChessElement('rb',false,0,7),
+                            new ChessElement('rb',false,7,7),
+                            new ChessElement('pw',true,0,1),
+                            new ChessElement('pw',true,1,1),
+                            new ChessElement('pw',true,2,1),
+                            new ChessElement('pw',true,3,1),
+                            new ChessElement('pw',true,4,1),
+                            new ChessElement('pw',true,5,1),
+                            new ChessElement('pw',true,6,1),
+                            new ChessElement('pw',true,7,1),
+                            new ChessElement('pb',false,0,6),
+                            new ChessElement('pb',false,1,6),
+                            new ChessElement('pb',false,2,6),
+                            new ChessElement('pb',false,3,6),
+                            new ChessElement('pb',false,4,6),
+                            new ChessElement('pb',false,5,6),
+                            new ChessElement('pb',false,6,6),
+                            new ChessElement('pb',false,7,6)];
 
         this.marcas = [];   // Marcas en el tablero para indicar movimientos posibles.
         this.piezas = [];
@@ -51,6 +82,10 @@ class Game{
                     this.rey.b = i;
                 }
             }
+        }
+
+        for(var i=0; i<config.length; ++i){
+            this.Move(config[i].i, config[i].f);
         }
 
         window.addEventListener('mousedown', this.click);
@@ -162,17 +197,19 @@ class Game{
             Devuelve true si mover la pieza 'i' a la casilla 'cas' genera un jaque
             para 'equipo' (true: jaque de las blancas para las negras).
         */
+        
         var myking = {};    // guarda la posicion del rey en este caso
-        if(equipo)
+        if(!equipo)
             myking = {...this.piezas[this.rey.w].casilla};
         else
             myking = {...this.piezas[this.rey.b].casilla};
-
+        
+            
         if(this.piezas[i].tipo.charAt(0) === 'k')
             myking = cas;   // si la pieza que se mueve es el rey, cambia la cosa
         
         for(var j=0; j<this.piezas.length; ++j){
-            if(equipo == (this.piezas[j].tipo.charAt(1) == 'w')){
+            if(equipo == (this.piezas[j].tipo.charAt(1) == 'w') && (this.piezas[j].casilla.x != cas.x || this.piezas[j].casilla.y != cas.y)){
                 if(this.CalcularMovimientos(j,false,i,cas).some(obj=>obj.x == myking.x && obj.y == myking.y)){
                     return true;
                 }
@@ -228,7 +265,11 @@ class Game{
             for(var k=0; k<moves.length; ++k){
                 if(this.turno){
                     // "Si es jaque de las negras moviendo la pieza i a la casilla moves[k]"
+                    if(moves[k].x == 3 && moves[k].y == 7)
+                        console.log("!!!!!!!!!!!!!!!!!!!!!!!!");            // -----DEBUG-----
                     if(this.Jaque(false,i,moves[k])){
+                        if(moves[k].x == 3 && moves[k].y == 7)
+                            console.log("el hdp lo elimina");               // -----DEBUG-----
                         moves.splice(k,1);
                         k -= 1;
                     }
@@ -385,8 +426,11 @@ class Game{
             // Peon blanco
             if(cas.y < 7){
                 // adelante
-                if(myTabPos[cas.x][cas.y+1] == -1)
+                if(myTabPos[cas.x][cas.y+1] == -1){
                     moves.push({x: cas.x, y: cas.y+1});
+                    if(cas.y == 1 && myTabPos[cas.x][cas.y+2] == -1)
+                        moves.push({x: cas.x, y: cas.y+2});
+                }
                 // diagonales
                 if(cas.x > 0 && myTabPos[cas.x-1][cas.y+1] != -1 && this.piezas[myTabPos[cas.x-1][cas.y+1]].tipo.charAt(1) == 'b')
                     moves.push({x: cas.x-1, y: cas.y+1});
@@ -397,8 +441,11 @@ class Game{
             // Peon negro
             if(cas.y > 0){
                 // adelante
-                if(myTabPos[cas.x][cas.y-1] == -1)
+                if(myTabPos[cas.x][cas.y-1] == -1){
                     moves.push({x: cas.x, y: cas.y-1});
+                    if(cas.y == 6 && myTabPos[cas.x][cas.y-2] == -1)
+                        moves.push({x: cas.x, y: cas.y-2});
+                }
                 // diagonales
                 if(cas.x > 0 && myTabPos[cas.x-1][cas.y-1] != -1 && this.piezas[myTabPos[cas.x-1][cas.y-1]].tipo.charAt(1) == 'w')
                     moves.push({x: cas.x-1, y: cas.y-1});
@@ -409,6 +456,352 @@ class Game{
         return moves;
     }
 
+    Queen(cas, myTabPos){
+        var moves = [];
+
+        // N
+        var i = 1;
+        while(cas.y+i < 8){
+            // 1 - casilla vacia
+            if(myTabPos[cas.x][cas.y+i] == -1){
+                moves.push({x: cas.x, y: cas.y+i});
+            }else{
+            // 2 - casilla ocupada
+                // 2.1 - pieza propia
+                if(this.piezas[myTabPos[cas.x][cas.y+i]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1)){
+                // 2.2 - pieza contraria
+                    moves.push({x: cas.x, y: cas.y+i});
+                }
+                break;
+            }
+            ++i;
+        }
+        // NE
+        i = 1;
+        while(cas.x+i < 8 && cas.y+i < 8){
+            // 1 - casilla vacia
+            if(myTabPos[cas.x+i][cas.y+i] == -1){
+                moves.push({x: cas.x+i, y: cas.y+i});
+            }else{
+            // 2 - casilla ocupada
+                // 2.1 - pieza propia
+                if(this.piezas[myTabPos[cas.x+i][cas.y+i]].tipo.charAt(1) == this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1)){
+                    break;
+                }else{
+                // 2.2 - pieza contraria
+                    moves.push({x: cas.x+i, y: cas.y+i});
+                    break;
+                }
+            }
+            ++i;
+        }
+        // S
+        i = 1;
+        while(cas.y-i >= 0){
+            // 1 - casilla vacia
+            if(myTabPos[cas.x][cas.y-i] == -1){
+                moves.push({x: cas.x, y: cas.y-i});
+            }else{
+            // 2 - casilla ocupada
+                // 2.1 - pieza propia
+                if(this.piezas[myTabPos[cas.x][cas.y-i]].tipo.charAt(1) == this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1)){
+                    break;
+                }else{
+                // 2.2 - pieza contraria
+                    moves.push({x: cas.x, y: cas.y-i});
+                    break;
+                }
+            }
+            ++i;
+        }
+        // SE
+        i = 1;
+        while(cas.x+i < 8 && cas.y-i >= 0){
+            // 1 - casilla vacia
+            if(myTabPos[cas.x+i][cas.y-i] == -1){
+                moves.push({x: cas.x+i, y: cas.y-i});
+            }else{
+            // 2 - casilla ocupada
+                // 2.1 - pieza propia
+                if(this.piezas[myTabPos[cas.x+i][cas.y-i]].tipo.charAt(1) == this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1)){
+                    break;
+                }else{
+                // 2.2 - pieza contraria
+                    moves.push({x: cas.x+i, y: cas.y-i});
+                    break;
+                }
+            }
+            ++i;
+        }
+        // E
+        i = 1;
+        while(cas.x+i < 8){
+            // 1 - casilla vacia
+            if(myTabPos[cas.x+i][cas.y] == -1){
+                moves.push({x: cas.x+i, y: cas.y});
+            }else{
+            // 2 - casilla ocupada
+                // 2.1 - pieza propia
+                if(this.piezas[myTabPos[cas.x+i][cas.y]].tipo.charAt(1) == this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1)){
+                    break;
+                }else{
+                // 2.2 - pieza contraria
+                    moves.push({x: cas.x+i, y: cas.y});
+                    break;
+                }
+            }
+            ++i;
+        }
+        // NO
+        i = 1;
+        while(cas.x-i >= 0 && cas.y+i < 8){
+            // 1 - casilla vacia
+            if(myTabPos[cas.x-i][cas.y+i] == -1){
+                moves.push({x: cas.x-i, y: cas.y+i});
+            }else{
+            // 2 - casilla ocupada
+                // 2.1 - pieza propia
+                if(this.piezas[myTabPos[cas.x-i][cas.y+i]].tipo.charAt(1) == this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1)){
+                    break;
+                }else{
+                // 2.2 - pieza contraria
+                    moves.push({x: cas.x-i, y: cas.y+i});
+                    break;
+                }
+            }
+            ++i;
+        }
+        // SO
+        i = 1;
+        while(cas.x-i >= 0 && cas.y-i >= 0){
+            // 1 - casilla vacia
+            if(myTabPos[cas.x-i][cas.y-i] == -1){
+                moves.push({x: cas.x-i, y: cas.y-i});
+            }else{
+            // 2 - casilla ocupada
+                // 2.1 - pieza propia
+                if(this.piezas[myTabPos[cas.x-i][cas.y-i]].tipo.charAt(1) == this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1)){
+                    break;
+                }else{
+                // 2.2 - pieza contraria
+                    moves.push({x: cas.x-i, y: cas.y-i});
+                    break;
+                }
+            }
+            ++i;
+        }
+        // O
+        i = 1;
+        while(cas.x-i >= 0){
+            // 1 - casilla vacia
+            if(myTabPos[cas.x-i][cas.y] == -1){
+                moves.push({x: cas.x-i, y: cas.y});
+            }else{
+            // 2 - casilla ocupada
+                // 2.1 - pieza propia
+                if(this.piezas[myTabPos[cas.x-i][cas.y]].tipo.charAt(1) == this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1)){
+                    break;
+                }else{
+                // 2.2 - pieza contraria
+                    moves.push({x: cas.x-i, y: cas.y});
+                    break;
+                }
+            }
+            ++i;
+        }
+
+        return moves;
+    }
+
+    Knight(cas, myTabPos){
+        var moves = [];
+
+        if(cas.x+1 < 8 && cas.y+2 < 8 && (myTabPos[cas.x+1][cas.y+2]==-1 || this.piezas[myTabPos[cas.x+1][cas.y+2]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1)))
+            moves.push({x: cas.x+1, y: cas.y+2});
+        if(cas.x+2 < 8 && cas.y+1 < 8 && (myTabPos[cas.x+2][cas.y+1]==-1 || this.piezas[myTabPos[cas.x+2][cas.y+1]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1)))
+            moves.push({x: cas.x+2, y: cas.y+1});
+        if(cas.x+2 < 8 && cas.y-1 >= 0 && (myTabPos[cas.x+2][cas.y-1]==-1 || this.piezas[myTabPos[cas.x+2][cas.y-1]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1)))
+            moves.push({x: cas.x+2, y: cas.y-1});
+        if(cas.x+1 < 8 && cas.y-2 >= 0 && (myTabPos[cas.x+1][cas.y-2]==-1 || this.piezas[myTabPos[cas.x+1][cas.y-2]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1)))
+            moves.push({x: cas.x+1, y: cas.y-2});
+        if(cas.x-1 >= 0 && cas.y-2 >= 0 && (myTabPos[cas.x-1][cas.y-2]==-1 || this.piezas[myTabPos[cas.x-1][cas.y-2]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1)))
+            moves.push({x: cas.x-1, y: cas.y-2});
+        if(cas.x-2 >= 0 && cas.y-1 >= 0 && (myTabPos[cas.x-2][cas.y-1]==-1 || this.piezas[myTabPos[cas.x-2][cas.y-1]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1)))
+            moves.push({x: cas.x-2, y: cas.y-1});
+        if(cas.x-2 >= 0 && cas.y+1 < 8 && (myTabPos[cas.x-2][cas.y+1]==-1 || this.piezas[myTabPos[cas.x-2][cas.y+1]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1)))
+            moves.push({x: cas.x-2, y: cas.y+1});
+        if(cas.x-1 >= 0 && cas.y+2 < 8 && (myTabPos[cas.x-1][cas.y+2]==-1 || this.piezas[myTabPos[cas.x-1][cas.y+2]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1)))
+            moves.push({x: cas.x-1, y: cas.y+2});
+
+        return moves;
+    }
+
+    Bishop(cas, myTabPos){
+        var moves = [];
+
+        //NE
+        var i = 1;
+        while(cas.x+i < 8 && cas.y+i < 8){
+            // 1 - casilla desocupada
+            if(myTabPos[cas.x+i][cas.y+i] == -1)
+                moves.push({x: cas.x+i, y: cas.y+i});
+            else{
+            // 2 - casilla ocupada
+                // 2.1 - casilla ocupada por pieza contraria
+                if(this.piezas[myTabPos[cas.x+i][cas.y+i]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x: cas.x+i, y: cas.y+i});
+                // 2.2 - casilla ocupada por pieza propia
+                break;
+            }
+            ++i;
+        }
+
+        //SE
+        i = 1;
+        while(cas.x+i < 8 && cas.y-i >= 0){
+            // 1 - casilla desocupada
+            if(myTabPos[cas.x+i][cas.y-i] == -1)
+                moves.push({x: cas.x+i, y: cas.y-i});
+            else{
+            // 2 - casilla ocupada
+                // 2.1 - casilla ocupada por pieza contraria
+                if(this.piezas[myTabPos[cas.x+i][cas.y-i]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x: cas.x+i, y: cas.y-i});
+                // 2.2 - casilla ocupada por pieza propia
+                break;
+            }
+            ++i;
+        }
+
+        //SO
+        i = 1;
+        while(cas.x-i >= 0 && cas.y-i >= 0){
+            // 1 - casilla desocupada
+            if(myTabPos[cas.x-i][cas.y-i] == -1)
+                moves.push({x: cas.x-i, y: cas.y-i});
+            else{
+            // 2 - casilla ocupada
+                // 2.1 - casilla ocupada por pieza contraria
+                if(this.piezas[myTabPos[cas.x-i][cas.y-i]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x: cas.x-i, y: cas.y-i});
+                // 2.2 - casilla ocupada por pieza propia
+                break;
+            }
+            ++i;
+        }
+
+        //NO
+        i = 1;
+        while(cas.x-i >= 0 && cas.y+i < 8){
+            // 1 - casilla desocupada
+            if(myTabPos[cas.x-i][cas.y+i] == -1)
+                moves.push({x: cas.x-i, y: cas.y+i});
+            else{
+            // 2 - casilla ocupada
+                // 2.1 - casilla ocupada por pieza contraria
+                if(this.piezas[myTabPos[cas.x-i][cas.y+i]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1))
+                    moves.push({x: cas.x-i, y: cas.y+i});
+                // 2.2 - casilla ocupada por pieza propia
+                break;
+            }
+            ++i;
+        }
+
+        return moves;
+    }
+
+    Rook(cas, myTabPos){
+        var moves = [];
+
+        // E
+        var i = 1;
+        while(cas.x+i < 8){
+            // 1 - casilla desocupada
+            if(myTabPos[cas.x+i][cas.y] == -1)
+                moves.push({x: cas.x+i, y: cas.y});
+            else{
+            // 2 - casilla ocupada
+                // 2.1 - casilla ocupada por pieza contraria
+                if(this.piezas[myTabPos[cas.x+i][cas.y]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]])
+                    moves.push({x: cas.x+i, y: cas.y})
+                // 2.2 - casilla ocupada por pieza propia
+                break;
+            }
+            ++i;
+        }
+
+        // O
+        i = 1;
+        while(cas.x-i >= 0){
+            // 1 - casilla desocupada
+            if(myTabPos[cas.x-i][cas.y] == -1)
+                moves.push({x: cas.x-i, y: cas.y});
+            else{
+            // 2 - casilla ocupada
+                // 2.1 - casilla ocupada por pieza contraria
+                if(this.piezas[myTabPos[cas.x-i][cas.y]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]])
+                    moves.push({x: cas.x-i, y: cas.y})
+                // 2.2 - casilla ocupada por pieza propia
+                break;
+            }
+            ++i;
+        }
+
+        // N
+        i = 1;
+        while(cas.y+i < 8){
+            // 1 - casilla desocupada
+            if(myTabPos[cas.x][cas.y+i] == -1)
+                moves.push({x: cas.x, y: cas.y+i});
+            else{
+            // 2 - casilla ocupada
+                // 2.1 - casilla ocupada por pieza contraria
+                if(this.piezas[myTabPos[cas.x][cas.y+i]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]])
+                    moves.push({x: cas.x, y: cas.y+i})
+                // 2.2 - casilla ocupada por pieza propia
+                break;
+            }
+            ++i;
+        }
+
+        // S
+        i = 1;
+        while(cas.y-i >= 0){
+            // 1 - casilla desocupada
+            if(myTabPos[cas.x][cas.y-i] == -1)
+                moves.push({x: cas.x, y: cas.y-i});
+            else{
+            // 2 - casilla ocupada
+                // 2.1 - casilla ocupada por pieza contraria
+                if(this.piezas[myTabPos[cas.x][cas.y-i]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]])
+                    moves.push({x: cas.x, y: cas.y-i})
+                // 2.2 - casilla ocupada por pieza propia
+                break;
+            }
+            ++i;
+        }
+
+        return moves;
+    }
+
+    Move(cas1, cas2){
+        // 1.2.2.2.1 - Eliminar pieza en la casilla destino (si hay)
+        if(this.tabPos[cas2.x][cas2.y] != -1){
+            this.EliminarPieza(this.tabPos[cas2.x][cas2.y]);
+            this.tabPos[cas2.x][cas2.y] = -1;
+        }
+
+        // 1.2.2.2.2 - Actualiza tabPos
+        this.tabPos[cas2.x][cas2.y] = JSON.parse(JSON.stringify(this.tabPos[cas1.x][cas1.y]));        //casilla nueva
+        this.tabPos[cas1.x][cas1.y] = -1;   //casilla vieja
+
+        // 1.2.2.2.3 - Mover pieza
+        this.piezas[this.tabPos[cas2.x][cas2.y]].Drop(cas2);
+
+        // 1.2.2.2.4 - Terminar turno
+        this.turno = !this.turno;
+    }
+
     update(){
         var str = "<p>";
         if(this.piezaSeleccionada != -1)
@@ -416,11 +809,6 @@ class Game{
         str += "marcas: ";
         for(var i=0; i<this.marcas.length; ++i)
             str += "(" + this.marcas[i].x + "," + this.marcas[i].y + ") ";
-        str += "<br>";
-        for(var i=0; i<this.piezas.length; ++i){
-            str += this.piezas[i].tipo + "; (" + this.piezas[i].casilla.x + "," +this.piezas[i].casilla.y + ")"
-                + "; tabPos dice: " + this.tabPos[this.piezas[i].casilla.x][this.piezas[i].casilla.y] + "<br>";
-        }
         str += "</p>";
         document.getElementById("marcas").innerHTML = str;
     }
