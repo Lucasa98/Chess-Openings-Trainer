@@ -6,8 +6,26 @@ html, body {
     overflow: hidden;
 }
 
+.canvas-container{
+    display: flex;
+}
+
 canvas {
     display: block;
-    width: 400px;
-    height: 400px;
+    width: 420px;
+    height: 420px;
+}
+
+.right-div{
+    font-family: "Courier New", Courier, monospace;
+    top:0;
+    width: 200px;
+    height: 410px;
+    background-color: #BFBFBF;
+    padding: 5px;
+}
+
+.buttons{
+    margin: 5px;
+    height: 30px;
 }

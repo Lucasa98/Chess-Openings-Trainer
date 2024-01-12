@@ -10,10 +10,6 @@ class Ajedrez{
     // Context
     this.ctx = this.canvas.getContext('2d');
 
-    // Config
-    // arreglo con jugadas
-    var config = [{i: {x: 4, y: 1}, f: {x: 4, y: 3}}, {i: {x: 4, y: 6}, f: {x: 4, y: 4}}];
-
     // Preload sprites
     this.LOADED = false;
     RSC = new Map();
@@ -39,7 +35,7 @@ class Ajedrez{
       self.LOADED = true;
 
       // Escena Inicial (Game para debugear, deberia ser Menu)
-      self.game = new Game(self.ctx, self.canvas, config);
+      self.game = new Game(self.ctx, self.canvas);
     })
     .catch(function(error) {
       // Check if the error object has a message property
@@ -72,31 +68,6 @@ class Ajedrez{
           this.game.update();
           this.game.draw();
         }
-        // draw
-
-        this.ctx.beginPath();
-        this.ctx.arc(0, 0, 5, 0, Math.PI * 2, false);
-        this.ctx.fillStyle = 'blue';
-        this.ctx.fill();
-        this.ctx.closePath();
-
-        this.ctx.beginPath();
-        this.ctx.arc(400, 0, 5, 0, Math.PI * 2, false);
-        this.ctx.fillStyle = 'blue';
-        this.ctx.fill();
-        this.ctx.closePath();
-
-        this.ctx.beginPath();
-        this.ctx.arc(0, 400, 5, 0, Math.PI * 2, false);
-        this.ctx.fillStyle = 'blue';
-        this.ctx.fill();
-        this.ctx.closePath();
-
-        this.ctx.beginPath();
-        this.ctx.arc(400, 400, 5, 0, Math.PI * 2, false);
-        this.ctx.fillStyle = 'blue';
-        this.ctx.fill();
-        this.ctx.closePath();
       }else{
         console.log('not yet loaded');
       }
@@ -122,5 +93,22 @@ class Ajedrez{
   resizeCanvas(){
     this.canvas.width = 400;
     this.canvas.height = 400;
+  }
+
+  // Botones
+  loadConfig(){
+    this.game.loadConfig();
+  }
+
+  saveConfig(){
+    this.game.saveConfig();
+  }
+
+  saveAll(){
+    this.game.saveAll();
+  }
+
+  shuffle(){
+    this.game.shuffle();
   }
 }

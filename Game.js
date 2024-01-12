@@ -1,5 +1,5 @@
 class Game{
-    constructor(ctx, canvas, config){
+    constructor(ctx, canvas){
         // Enlazar this's
         this.update = this.update.bind(this);
         this.draw = this.draw.bind(this);
@@ -13,6 +13,8 @@ class Game{
         this.ctx = ctx;
         this.canvas = canvas;
 
+        this.config = [];
+        this.loadConfigs();
         this.initialConfig = [new ChessElement('kw',true,4,0),
                             new ChessElement('kb',false,4,7),
                             new ChessElement('qw',true,3,0),
@@ -66,30 +68,11 @@ class Game{
         this.rey = {b: -1, w: -1};  // indice para encontrar los reyes
         this.turno = true;
 
-        for(var i=0; i<this.initialConfig.length; ++i){
-            // Verificacion de que la configuración está bien y que la casilla no está ocupada.
-            if(this.tabPos[this.initialConfig[i].x][this.initialConfig[i].y] != -1){
-                console.error('CONFIGERROR: casilla ocupada\n'
-                            + '>>> ' + String.fromCharCode('a'.charCodeAt()+this.initialConfig[i].x)
-                            + (this.initialConfig[i].y+1)
-                            + ' ocupada por ' + this.piezas[this.tabPos[this.initialConfig[i].x][this.initialConfig[i].y]].tipo );
-            }else{
-                this.tabPos[this.initialConfig[i].x][this.initialConfig[i].y] = this.piezas.length;
-                this.piezas.push(new Pieza(this.ctx, this.canvas, this.initialConfig[i].tipo, this.initialConfig[i].color, this.initialConfig[i].x, this.initialConfig[i].y));
-                if(this.initialConfig[i].tipo === 'kw'){
-                    this.rey.w = i;
-                }else if(this.initialConfig[i].tipo === 'kb'){
-                    this.rey.b = i;
-                }
-            }
-        }
-
-        for(var i=0; i<config.length; ++i){
-            this.Move(config[i].i, config[i].f);
-        }
+        this.LoadInitialConfig();
 
         window.addEventListener('mousedown', this.click);
         window.addEventListener('mouseup', this.unclick);
+
     }
 
     click(event){
@@ -137,10 +120,11 @@ class Game{
                     }
                     // 1.2.2.2.2 - Actualiza tabPos
                     this.tabPos[casilla.x][casilla.y] = JSON.parse(JSON.stringify(this.piezaSeleccionada));     //casilla nueva
-
                     this.tabPos[this.piezas[this.piezaSeleccionada].casilla.x][this.piezas[this.piezaSeleccionada].casilla.y] = -1;   //casilla vieja
-                    // 1.2.2.2.3 - Mover pieza
 
+                    // 1.2.2.2.3 - Mover pieza
+                    this.config.push({i: {x: this.piezas[this.piezaSeleccionada].casilla.x, y: this.piezas[this.piezaSeleccionada].casilla.y},
+                                      f: {x: casilla.x, y: casilla.y}});
                     this.piezas[this.piezaSeleccionada].Drop(casilla);
                     // 1.2.2.2.4 - Deseleccionar pieza
                     this.piezaSeleccionada = -1;
@@ -722,7 +706,7 @@ class Game{
             else{
             // 2 - casilla ocupada
                 // 2.1 - casilla ocupada por pieza contraria
-                if(this.piezas[myTabPos[cas.x+i][cas.y]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]])
+                if(this.piezas[myTabPos[cas.x+i][cas.y]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1))
                     moves.push({x: cas.x+i, y: cas.y})
                 // 2.2 - casilla ocupada por pieza propia
                 break;
@@ -739,7 +723,7 @@ class Game{
             else{
             // 2 - casilla ocupada
                 // 2.1 - casilla ocupada por pieza contraria
-                if(this.piezas[myTabPos[cas.x-i][cas.y]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]])
+                if(this.piezas[myTabPos[cas.x-i][cas.y]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1))
                     moves.push({x: cas.x-i, y: cas.y})
                 // 2.2 - casilla ocupada por pieza propia
                 break;
@@ -756,7 +740,7 @@ class Game{
             else{
             // 2 - casilla ocupada
                 // 2.1 - casilla ocupada por pieza contraria
-                if(this.piezas[myTabPos[cas.x][cas.y+i]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]])
+                if(this.piezas[myTabPos[cas.x][cas.y+i]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1))
                     moves.push({x: cas.x, y: cas.y+i})
                 // 2.2 - casilla ocupada por pieza propia
                 break;
@@ -773,7 +757,7 @@ class Game{
             else{
             // 2 - casilla ocupada
                 // 2.1 - casilla ocupada por pieza contraria
-                if(this.piezas[myTabPos[cas.x][cas.y-i]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]])
+                if(this.piezas[myTabPos[cas.x][cas.y-i]].tipo.charAt(1) != this.piezas[myTabPos[cas.x][cas.y]].tipo.charAt(1))
                     moves.push({x: cas.x, y: cas.y-i})
                 // 2.2 - casilla ocupada por pieza propia
                 break;
@@ -802,14 +786,140 @@ class Game{
         this.turno = !this.turno;
     }
 
+    loadConfigs(){
+        this.configurations = [];
+
+        fetch('openings.txt') // Replace 'yourfile.txt' with the path to your .txt file
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(textContent => {
+                this.configurations = JSON.parse(textContent);   // Now 'textContent' contains the content of the text file as a single string
+                this.PopulateDropdown();
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+        
+    }
+
+    PopulateDropdown(){
+
+        // Get the dropdown element
+        var dropdown = document.getElementById('configList');
+
+        // Clear existing options
+        dropdown.innerHTML = '';
+
+        // Add options from the list
+        for (var i = 0; i < this.configurations.length; i++) {
+            var option = document.createElement('option');
+            option.value = this.configurations[i].name;
+            option.text = this.configurations[i].name;
+            dropdown.appendChild(option);
+        }
+    }
+
+    loadConfig(){
+        this.LoadInitialConfig();
+
+        // Retrieve the selected value from localStorage
+        var selectedValue = document.getElementById('configList').value;
+        
+
+        for(var i=0; i<this.configurations.length; ++i){
+            if(this.configurations[i].name == selectedValue){
+                this.config = JSON.parse(JSON.stringify(this.configurations[i].config));
+            }
+        }
+
+        for(var i=0; i<this.config.length; ++i)
+            this.Move(this.config[i].i, this.config[i].f);
+    }
+
+    LoadInitialConfig(){
+        this.piezas.length = 0;
+
+        this.tabPos = [ [-1,-1,-1,-1,-1,-1,-1,-1],
+                        [-1,-1,-1,-1,-1,-1,-1,-1],
+                        [-1,-1,-1,-1,-1,-1,-1,-1],
+                        [-1,-1,-1,-1,-1,-1,-1,-1],
+                        [-1,-1,-1,-1,-1,-1,-1,-1],
+                        [-1,-1,-1,-1,-1,-1,-1,-1],
+                        [-1,-1,-1,-1,-1,-1,-1,-1],
+                        [-1,-1,-1,-1,-1,-1,-1,-1],];
+        
+        for(var i=0; i<this.initialConfig.length; ++i){
+            this.tabPos[this.initialConfig[i].x][this.initialConfig[i].y] = this.piezas.length;
+            this.piezas.push(new Pieza(this.ctx, this.canvas, this.initialConfig[i].tipo, this.initialConfig[i].color, this.initialConfig[i].x, this.initialConfig[i].y));
+            if(this.initialConfig[i].tipo === 'kw'){
+                this.rey.w = i;
+            }else if(this.initialConfig[i].tipo === 'kb'){
+                this.rey.b = i;
+            }
+        }
+    }
+
+    saveConfig(){
+        var name = document.getElementById("saveConfigName").value;
+        console.log(this.configurations);
+        if(name && !this.configurations.some(obj=> obj.name == name)){
+            this.configurations.push({name: name, config: JSON.parse(JSON.stringify(this.config))});
+            this.PopulateDropdown();
+        }
+    }
+
+    saveAll(){
+        // Sample string to save
+        var content = JSON.stringify(this.configurations);
+
+        // Create a Blob from the string content
+        var blob = new Blob([content], { type: 'application/json' });
+
+        // Create a link element
+        var link = document.createElement('a');
+
+        // Set the download attribute and create a URL for the Blob
+        link.download = 'openings.txt';
+        link.href = URL.createObjectURL(blob);
+
+        // Append the link to the document body
+        document.body.appendChild(link);
+
+        // Trigger a click on the link to start the download
+        link.click();
+
+        // Remove the link from the document
+        document.body.removeChild(link);
+    }
+
+    shuffle(){
+        this.LoadInitialConfig();
+
+        var selectedValue = Math.floor(Math.random()*(this.configurations.length));
+        this.config = JSON.parse(JSON.stringify(this.configurations[selectedValue].config));
+
+        for(var i=0; i<this.config.length; ++i)
+            this.Move(this.config[i].i, this.config[i].f);
+    }
+
     update(){
-        var str = "<p>";
-        if(this.piezaSeleccionada != -1)
-            str = "pieza seleccionada: " + this.piezas[this.piezaSeleccionada].tipo + `<br>`;
-        str += "marcas: ";
-        for(var i=0; i<this.marcas.length; ++i)
-            str += "(" + this.marcas[i].x + "," + this.marcas[i].y + ") ";
-        str += "</p>";
+        var str = "";
+        str += "moves: <br>";
+        for(var i=0; i<this.config.length; i+=2){
+            var ini = String.fromCharCode('a'.charCodeAt()+this.config[i].i.x) + (this.config[i].i.y + 1);
+            var fin = String.fromCharCode('a'.charCodeAt()+this.config[i].f.x) + (this.config[i].f.y + 1);
+            str += `${ini} ${fin}, `;
+            if(i+1 < this.config.length){
+                ini = String.fromCharCode('a'.charCodeAt()+this.config[i+1].i.x) + (this.config[i+1].i.y + 1);
+                fin = String.fromCharCode('a'.charCodeAt()+this.config[i+1].f.x) + (this.config[i+1].f.y + 1);
+                str += `${ini} ${fin}`;
+            }
+            str += "<br>";
+        }
         document.getElementById("marcas").innerHTML = str;
     }
 

@@ -8,16 +8,31 @@
     <title>Chess Opening Trainer</title>
 </head>
 <body>
-    <canvas id="canvas" width="400" height="400"></canvas>
-    <!-- Objetos -->
-    <script src="ChessElement.js"></script>
-    <script src="Pieza.js"></script>
-    <!-- Escenas y juego -->
-    <script src="Menu.js"></script>
-    <script src="Game.js"></script>
-    <script src="Ajedrez.js"></script>
-    <!-- main -->
-    <script src="main.js"></script>
-    <p id="marcas"></p>
+    <div class="canvas-container">
+        <canvas id="canvas" width="420" height="420"></canvas>
+        <!-- Objetos -->
+        <script src="ChessElement.js"></script>
+        <script src="Pieza.js"></script>
+        <!-- Escenas y juego -->
+        <script src="Menu.js"></script>
+        <script src="Game.js"></script>
+        <script src="Ajedrez.js"></script>
+        <!-- main -->
+        <script src="main.js"></script>
+        <div id="marcas" class="right-div"></div>
+        <div class="buttons">
+            <div>
+                <input type="text" id="saveConfigName" placeholder="Opening Name">
+                <button onclick="ajedrez.saveConfig()">Save Opening</button>
+            </div>
+            <div>
+                <select id="configList"></select>
+                <button onclick="ajedrez.loadConfig()">Load Opening</button>
+            </div>
+            <br>
+            <button onclick="ajedrez.saveAll()">Save All</button>
+            <button onclick="ajedrez.shuffle()">Shuffle</button>
+        </div>
+    </div>
 </body>
 </html>
